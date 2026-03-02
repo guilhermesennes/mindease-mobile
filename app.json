@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "MindEase",
+    "slug": "mindease-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"]
+  }
+}
