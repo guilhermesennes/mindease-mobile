@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Card } from "../components/Card";
 import { SectionTitle } from "../components/SectionTitle";
 import { useTasks } from "../context/TasksContext";
@@ -14,6 +15,7 @@ export function TasksScreen() {
     useTasks();
   const { settings } = useSettings();
   const theme = useCognitiveTheme();
+  const [view, setView] = useState<"kanban" | "list">("kanban");
 
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -42,11 +44,35 @@ export function TasksScreen() {
 
   const columns = useMemo(
     () => [
-      { status: "todo" as TaskStatus, label: "A iniciar" },
-      { status: "doing" as TaskStatus, label: "Em foco" },
-      { status: "done" as TaskStatus, label: "Concluido" }
+      {
+        status: "todo" as TaskStatus,
+        label: "A iniciar",
+        color: settings.complexityLevel === "detailed"
+          ? theme.settings.themeMode === "dark"
+            ? "#888888"
+            : "#666666"
+          : "#ed6c02"
+      },
+      {
+        status: "doing" as TaskStatus,
+        label: "Em foco",
+        color: settings.complexityLevel === "detailed"
+          ? theme.settings.themeMode === "dark"
+            ? "#999999"
+            : "#555555"
+          : "#0288d1"
+      },
+      {
+        status: "done" as TaskStatus,
+        label: "Concluido",
+        color: settings.complexityLevel === "detailed"
+          ? theme.settings.themeMode === "dark"
+            ? "#aaaaaa"
+            : "#444444"
+          : "#2e7d32"
+      }
     ],
-    []
+    [settings.complexityLevel, theme.settings.themeMode]
   );
 
   const displayTasks = settings.complexityLevel === "simple" ? tasks.slice(0, 5) : tasks;
@@ -69,9 +95,47 @@ export function TasksScreen() {
       style={{ flex: 1, backgroundColor: theme.color.bg }}
       contentContainerStyle={{ gap: theme.spacing, padding: theme.spacing }}
     >
-      <Text style={{ color: theme.color.text, fontSize: theme.text.titleSize, fontWeight: "700" }}>
+      <Text style={{ color: theme.color.text, fontSize: theme.text.titleSize + 8, fontWeight: "700" }}>
         Organizador de Tarefas
       </Text>
+      <Text style={{ color: theme.color.muted, fontSize: theme.text.bodySize }}>
+        Gerencie suas atividades com suporte cognitivo.
+      </Text>
+
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+        <Pressable
+          onPress={() => setView("kanban")}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: view === "kanban" ? theme.color.primary : theme.color.border,
+            backgroundColor: view === "kanban" ? theme.color.primary : theme.color.card
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <MaterialIcons name="view-column" size={16} color={view === "kanban" ? "#fff" : theme.color.text} />
+            <Text style={{ color: view === "kanban" ? "#fff" : theme.color.text }}>Kanban</Text>
+          </View>
+        </Pressable>
+        <Pressable
+          onPress={() => setView("list")}
+          style={{
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: view === "list" ? theme.color.primary : theme.color.border,
+            backgroundColor: view === "list" ? theme.color.primary : theme.color.card
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <MaterialIcons name="view-list" size={16} color={view === "list" ? "#fff" : theme.color.text} />
+            <Text style={{ color: view === "list" ? "#fff" : theme.color.text }}>Lista</Text>
+          </View>
+        </Pressable>
+      </View>
 
       <Card>
         <SectionTitle>Pomodoro adaptado</SectionTitle>
@@ -156,29 +220,71 @@ export function TasksScreen() {
         </Card>
       )}
 
-      {columns.map((column) => {
-        const items = displayTasks.filter((task) => task.status === column.status);
-        return (
-          <Card key={column.status}>
-            <SectionTitle>{column.label}</SectionTitle>
-            {items.length === 0 ? (
-              <Text style={{ color: theme.color.muted, fontSize: theme.text.smallSize }}>Sem tarefas nesta etapa.</Text>
-            ) : (
-              items.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  moveTask={moveTask}
-                  toggleChecklistItem={toggleChecklistItem}
-                  addChecklistItem={addChecklistItem}
-                  removeChecklistItem={removeChecklistItem}
-                  removeTask={removeTask}
-                />
-              ))
-            )}
-          </Card>
-        );
-      })}
+      {view === "kanban"
+        ? columns.map((column) => {
+            const items = displayTasks.filter((task) => task.status === column.status);
+            return (
+              <Card key={column.status} style={{ borderTopColor: column.color }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <SectionTitle>{column.label}</SectionTitle>
+                  <View
+                    style={{
+                      backgroundColor: column.color,
+                      borderRadius: 999,
+                      paddingHorizontal: 10,
+                      paddingVertical: 2,
+                      marginBottom: 8
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: theme.text.smallSize, fontWeight: "700" }}>{items.length}</Text>
+                  </View>
+                </View>
+                {items.length === 0 ? (
+                  <Text style={{ color: theme.color.muted, fontSize: theme.text.smallSize }}>Sem tarefas nesta etapa.</Text>
+                ) : (
+                  items.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      moveTask={moveTask}
+                      toggleChecklistItem={toggleChecklistItem}
+                      addChecklistItem={addChecklistItem}
+                      removeChecklistItem={removeChecklistItem}
+                      removeTask={removeTask}
+                    />
+                  ))
+                )}
+              </Card>
+            );
+          })
+        : (
+            <Card>
+              <SectionTitle>Lista geral</SectionTitle>
+              {displayTasks.length === 0 ? (
+                <Text style={{ color: theme.color.muted, fontSize: theme.text.smallSize }}>Nenhuma tarefa criada ainda.</Text>
+              ) : (
+                displayTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    moveTask={moveTask}
+                    toggleChecklistItem={toggleChecklistItem}
+                    addChecklistItem={addChecklistItem}
+                    removeChecklistItem={removeChecklistItem}
+                    removeTask={removeTask}
+                  />
+                ))
+              )}
+            </Card>
+          )}
+
+      <Card style={{ backgroundColor: theme.color.info }}>
+        <SectionTitle>Dicas para melhor produtividade</SectionTitle>
+        <Text style={{ color: "#fff", fontSize: theme.text.smallSize }}>• Divida tarefas grandes em subtarefas menores</Text>
+        <Text style={{ color: "#fff", fontSize: theme.text.smallSize }}>• Use o timer Pomodoro para manter o foco</Text>
+        <Text style={{ color: "#fff", fontSize: theme.text.smallSize }}>• Priorize 3 tarefas principais por dia</Text>
+        <Text style={{ color: "#fff", fontSize: theme.text.smallSize }}>• Faça pausas regulares para evitar sobrecarga</Text>
+      </Card>
     </ScrollView>
   );
 }

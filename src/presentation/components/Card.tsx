@@ -14,7 +14,9 @@ export function Card(props: ViewProps) {
           borderColor: theme.color.border,
           borderWidth: 1,
           borderRadius: theme.radius,
-          padding: theme.spacing
+          padding: theme.spacing,
+          borderTopWidth: 3,
+          borderTopColor: theme.color.primary
         },
         props.style
       ]}
